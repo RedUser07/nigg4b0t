@@ -51,7 +51,7 @@ const handler = async (m, { conn, usedPrefix, isAdmin, isOwner, isROwner }) => {
 
   const info = `
 *╭━━━━━━━⚡━━━━━━━╮*
-*✦ 𝚫𝐗𝐈𝐎𝐍 • 𝐒𝐓𝐀𝐓𝐔𝐒 ✦*
+*✦ 𝑵𝑰𝑮𝑮𝑨 • 𝐒𝐓𝐀𝐓𝐔𝐒 ✦*
 *╰━━━━━━━⚡━━━━━━━╯*
 
 *🚀 𝐋𝐚𝐭𝐞𝐧𝐜𝐲:* ${speedWithFont} ms
@@ -64,7 +64,7 @@ const handler = async (m, { conn, usedPrefix, isAdmin, isOwner, isROwner }) => {
 *🧩 𝐏𝐥𝐮𝐠𝐢𝐧𝐬:* ${toMathematicalAlphanumericSymbols(totalPlugins)}
 *✅ 𝐒𝐭𝐚𝐭𝐮𝐬:* Online
 
-> *𝛥𝐗𝐈𝚶𝐍 𝚩𝚯𝐓*
+> *𝑵𝑰𝑮𝑮𝑨-𝑩𝑶𝑻*
 `.trim()
 
   const buttons = [
