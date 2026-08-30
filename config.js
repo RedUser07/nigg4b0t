@@ -1,81 +1,123 @@
-import { watchFile } from 'fs'
+import { watchFile, unwatchFile } from 'fs'
 import { fileURLToPath, pathToFileURL } from 'url'
 import chalk from 'chalk'
 import fs from 'fs'
-const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'))
+import * as cheerio from 'cheerio'
+import fetch from 'node-fetch'
+import axios from 'axios'
+import moment from 'moment-timezone'
+import NodeCache from 'node-cache'
 
-/*⭑⭒━━━✦❘༻☾⋆⁺₊✧ 𝓿𝓪𝓻𝓮𝓫𝓸𝓽 ✧₊⁺⋆☽༺❘✦━━━⭒⭑*/
+const pkg =
+  JSON.parse(
+    fs.readFileSync(
+      './package.json',
+      'utf-8'
+    )
+  )
 
-global.prefisso = '.'
-global.sam = ['393514357738',]
+const moduleCache =
+  new NodeCache({
+    stdTTL: 300
+  })
+
 global.owner = [
-  ['393476686131', 'sam', true],
-  ['393511082922', 'gio', true],
-  ['393392645292', 'mavko', true],
-  ['212614769337', 'zexin/giuse', true],
-  ['393514357738', 'vare', true],
-  ['393715983481', 'youns/kinderino', true],
-
+  ['639751826685', '𝕯𝖊ⱥ𝖉𝖑𝐲', true],
+  ['393520981708', 'young', true],
+  ['393762883794', 'red', true],
 ]
-global.mods = ['393514357738', '393511082922', '393392645292']
-global.prems = ['393514357738', '393511082922', '212614769337']
 
-/*⭑⭒━━━✦❘༻🩸 INFO BOT 🕊️༺❘✦━━━⭒⭑*/
+global.mods = [
+  'xxxxxxxxxx',
+  'xxxxxxxxxx'
+]
 
-global.nomepack = 'vare ✧ bot'
-global.nomebot = '✧˚🩸 varebot 🕊️˚✧'
-global.wm = 'vare ✧ bot'
-global.autore = 'SⒶ𝔪'
-global.dev = '⋆｡˚- SⒶ𝔪'
-global.testobot = `༻⋆⁺₊𝓿𝓪𝓻𝓮𝓫𝓸𝓽₊⁺⋆༺`
+global.prems = [
+  'xxxxxxxxxx',
+  'xxxxxxxxxx'
+]
+
+global.nomebot  = '𝑵𝑰𝑮𝑮𝑨 𝑩𝑶𝑻'
+global.nomepack = '𝑵𝑰𝑮𝑮𝑨 𝑩𝑶𝑻'
+
+global.wm       = '𝑵𝑰𝑮𝑮𝑨 𝑩𝑶𝑻'
+
+global.autore   = '𝑵𝑰𝑮𝑮𝑨-𝑩𝑶𝑻'
+global.dev      = '𝑵𝑰𝑮𝑮𝑨-𝑩𝑶𝑻'
+
 global.versione = pkg.version
-global.errore = '⚠️ *Errore inatteso!* Usa il comando `.segnala <errore>` per avvisare lo sviluppatore.'
 
-/*⭑⭒━━━✦❘༻� LINK 🌐༺❘✦━━━⭒⭑*/
+global.testobot =
+  `NIGGA-CORE-V${pkg.version}`
 
-global.repobot = 'https://github.com/realvare/varebot'
-global.gruppo = 'https://chat.whatsapp.com/bysamakavare'
-global.canale = 'https://whatsapp.com/channel/0029VbB41Sa1Hsq1JhsC1Z1z'
-global.insta = 'https://www.instagram.com/samakavare'
+global.errore =
+  '⚠️ *[SYSTEM ERROR]* Usa `.segnala` per inviare il log allo staff.'
 
-/*⭑⭒━━━✦❘🗝️ API KEYS 🌍༺❘✦━━━⭒⭑*/
-
-// Le keys con scritto "varebot" vanno cambiate con keys valide
-// Nel README.md ci sono i vari link per ottenere le keys
+global.cheerio = cheerio
+global.fs      = fs
+global.fetch   = fetch
+global.axios   = axios
+global.moment  = moment
 
 global.APIKeys = {
-    spotifyclientid: 'varebot',
-    spotifysecret: 'varebot',
-    browserless: 'varebot',
-    tmdb: 'varebot',
-    ocrspace: 'jjjsheu',
-    assemblyai: 'varebot',
-    google: 'varebot',
-    googleCX: 'varebot',
-    genius: 'varebot',
-    removebg: 'varebot',
-    openrouter: 'varebot',
-    sightengine_user: 'varebot',
-    sightengine_secret: 'varebot',
-    lastfm: 'varebot',
+  spotifyclientid: 'nigga',
+  spotifysecret: 'nigga',
+  browserless: 'nigga',
+  screenshotone: 'nigga',
+  tmdb: 'nigga',
+  gemini: 'nigga',
+  ocrspace: 'nigga',
+  assemblyai: 'nigga',
+  google: 'nigga',
+  googlex: 'nigga',
+  googleCX: 'nigga',
+  genius: 'nigga',
+  unsplash: 'nigga',
+  removebg: 'FEx4CYmYN1QRQWD1mbZp87jV',
+  openrouter: 'nigga',
+  lastfm: '36f859a1fc4121e7f0e931806507d5f9',
+  sightengine_user: '1244671441',
+  sightengine_secret: 'uvqy7fWkiqLbrs4YbdDTnn3a3ZvuEhjM',
 }
 
-/*⭑⭒━━━✦❘༻🪷 SISTEMA XP/EURO 💸༺❘✦━━━⭒⭑*/
+let filePath =
+  fileURLToPath(import.meta.url)
 
-global.multiplier = 1
-
-/*⭑⭒━━━✦❘༻📦 RELOAD 📦༺❘✦━━━⭒⭑*/
-
-let filePath = fileURLToPath(import.meta.url)
-let fileUrl = pathToFileURL(filePath).href
+let fileUrl =
+  pathToFileURL(filePath).href
 
 const reloadConfig = async () => {
-  console.log(chalk.bgHex('#3b0d95')(chalk.white.bold("File: 'config.js' Aggiornato")))
-  try {
-    await import(`${fileUrl}?update=${Date.now()}`)
-  } catch (e) {
-    console.error('[ERRORE] Errore nel reload di config.js:', e)
-  }
+
+  const cached =
+    moduleCache.get(fileUrl)
+
+  if (cached)
+    return cached
+
+  unwatchFile(filePath)
+
+  console.log(
+    chalk.bgCyan.black(' SYSTEM ') +
+    chalk.cyan(
+      ` File 'config.js' aggiornato con successo.`
+    )
+  )
+
+  const module =
+    await import(
+      `${fileUrl}?update=${Date.now()}`
+    )
+
+  moduleCache.set(
+    fileUrl,
+    module,
+    { ttl: 300 }
+  )
+
+  return module
 }
 
-watchFile(filePath, reloadConfig)
+watchFile(
+  filePath,
+  reloadConfig
+)
