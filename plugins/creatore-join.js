@@ -1,24 +1,65 @@
-let linkRegex = /chat.whatsapp.com\/([0-9A-Za-z]{20,24})( [0-9]{1,3}|inf)?/i;
-let handler = async (m, { conn, text, isOwner, usedPrefix, command }) => {
-    if (!text) return m.reply(`令 Inserisci il link del gruppo.\n> *Esempio:* ${usedPrefix + command} <link> <numero di giorni | inf>.`);
-    let [_, code, expired] = text.match(linkRegex) || [];
-    if (!code) return m.reply('令 Link non valido.');
-    const isNumber = (x) => (x = parseInt(x), typeof x === 'number' && !isNaN(x));
-    let res = await conn.groupAcceptInvite(code);
-    if (expired === 'inf') {
-        m.reply(`令 Mi sono unito correttamente al gruppo senza una data di scadenza.`);
-    } else {
-        expired = Math.floor(Math.min(999, Math.max(1, isOwner ? isNumber(expired) ? parseInt(expired) : 0 : 3)));
-        m.reply(`令 Mi sono unito correttamente al gruppo per *${expired}* giorni.`);
-        let chats = global.db.data.chats[res];
-        if (!chats) chats = global.db.data.chats[res] = {};
-        if (expired) chats.expired = +new Date() + expired * 1000 * 60 * 60 * 24;
+const handler = async (m, { conn, text, args }) => {
+    const link = args.length >= 1 ? args[0] : text
+    const regex = /chat\.whatsapp\.com\/([0-9A-Za-z]{20,24})/i
+    const match = link ? link.match(regex) : null
+
+    if (!match) return m.reply('⚠️ Link non valido. Assicurati di inviare un link di WhatsApp corretto.')
+
+    const code = match[1]
+
+    try {
+        const res = await conn.groupGetInviteInfo(code)
+        await conn.groupAcceptInvite(code)
+
+        let ownerJid = res.owner || ''
+        let mentionsList = ownerJid ? [ownerJid] : []
+
+        const isLid = ownerJid.includes('@lid')
+
+        let contact = conn.contacts?.[ownerJid]
+
+        if (isLid) {
+            try {
+                const metadata = await conn.groupMetadata(res.id)
+                const realOwner =
+                    metadata.owner ||
+                    metadata.participants.find(p => p.admin === 'superadmin')?.id
+
+                if (realOwner && !realOwner.includes('@lid')) {
+                    ownerJid = realOwner
+                    mentionsList = [ownerJid]
+                    contact = conn.contacts?.[ownerJid]
+                }
+            } catch {}
+        }
+
+        const ownerName = contact?.notify || contact?.name || contact?.verifiedName || null
+        const ownerDisplay = ownerName
+            ? `@~${ownerName}`
+            : ownerJid
+                ? `@${ownerJid.split('@')[0]}`
+                : 'Sconosciuto'
+
+        await m.reply(`✅ *ENTRATO CON SUCCESSO*\n\n📌 *Gruppo:* ${res.subject}\n🆔 *ID:* ${res.id}\n👑 *Creatore:* ${ownerDisplay}`)
+
+    } catch (e) {
+        console.error(e)
+
+        if (e.message?.includes('401') || e.message?.includes('not-authorized')) {
+            return m.reply('❌ *IMPOSSIBILE ENTRARE*\nIl bot è stato rimosso o bannato da questo gruppo in precedenza.')
+        }
+
+        if (e.message?.includes('404') || e.message?.includes('resource-gone')) {
+            return m.reply('❌ *LINK SCADUTO*\nIl link di invito è stato revocato o non è valido.')
+        }
+
+        m.reply('⚠️ Link non valido. Assicurati di inviare un link di WhatsApp corretto.')
     }
-};
+}
 
-handler.help = ['join *<link> <giorni | inf>*'];
-handler.tags = ['creatore'];
-handler.command = ['join'];
-handler.owner = true;
+handler.help = ['join <link>']
+handler.tags = ['owner']
+handler.command = ['join', 'entra']
+handler.owner = true
 
-export default handler;
+export default handler
