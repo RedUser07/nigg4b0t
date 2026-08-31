@@ -1,102 +1,120 @@
-const handler = async (m, { conn, args }) => {
-  try {
-    const mentionedJid = m.mentionedJid[0];
 
-    if (!mentionedJid) {
-      return m.reply('❌ *Devi taggare un utente per usare questo comando*\nEsempio: .spamtag @utente');
+import { generateWAMessageFromContent } from '@realvare/baileys'
+
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
+
+const handler = async (m, { conn, args, groupMetadata }) => {
+    const number = parseInt(args[0])
+
+    if (!number || number < 1) {
+        return m.reply(`Usa così:\n*.spam 1*`)
     }
-    let cittaragazzo = conn.decodeJid(mentionedJid);
-    if (cittaragazzo.includes('@lid')) {
-      const contact = Object.values(conn.store.contacts).find(c => c.lid === cittaragazzo);
-      if (contact) {
-        cittaragazzo = contact.id;
-      }
+
+    if (number > 100) {
+        return m.reply('❌ Massimo 100 messaggi per volta.')
     }
-    const formatText = (inputText) => {
-      if (!inputText) return '';
-      const cleanNumber = cittaragazzo.split('@')[0].replace(/[^0-9]/g, '');
-      return inputText.replace(/@⁨[^⁩]*⁩|@(\d+)/g, `@${cleanNumber}`);
-    };
 
-    const tagz = async (index) => {
-      if (index >= 6) return;
-      
-      const text = args.join(' ');
-      
-      if (m.quoted) {
-        const quoted = m.quoted;
-        if (quoted.mtype === 'imageMessage') {
-          const media = await quoted.download();
-          await conn.sendMessage(m.chat, {
-            image: media,
-            caption: formatText(text || quoted.text || ''),
-            mentions: [cittaragazzo]
-          }, { quoted: m });
-        }
-        else if (quoted.mtype === 'videoMessage') {
-          const media = await quoted.download();
-          await conn.sendMessage(m.chat, {
-            video: media,
-            caption: formatText(text || quoted.text || ''),
-            mentions: [cittaragazzo]
-          }, { quoted: m });
-        }
-        else if (quoted.mtype === 'audioMessage') {
-          const media = await quoted.download();
-          await conn.sendMessage(m.chat, {
-            audio: media,
-            mimetype: 'audio/mp4',
-            mentions: [cittaragazzo]
-          }, { quoted: m });
-        }
-        else if (quoted.mtype === 'documentMessage') {
-          const media = await quoted.download();
-          await conn.sendMessage(m.chat, {
-            document: media,
-            mimetype: quoted.mimetype,
-            fileName: quoted.fileName,
-            caption: formatText(text || quoted.text || ''),
-            mentions: [cittaragazzo]
-          }, { quoted: m });
-        }
-        else if (quoted.mtype === 'stickerMessage') {
-          const media = await quoted.download();
-          await conn.sendMessage(m.chat, {
-            sticker: media,
-            mentions: [cittaragazzo]
-          }, { quoted: m });
-        }
-        else {
-          await conn.sendMessage(m.chat, {
-            text: formatText(quoted.text || text || ''),
-            mentions: [cittaragazzo]
-          }, { quoted: m });
-        }
-      }
-      else if (text) {
-        await conn.sendMessage(m.chat, {
-          text: formatText(text),
-          mentions: [cittaragazzo]
-        }, { quoted: m });
-      }
-      else {
-        return m.reply('❌ *Inserisci un testo o rispondi a un messaggio/media*');
-      }
-      if (index < 5) {
-        setTimeout(() => tagz(index + 1), 1500);
-      }
-    };
-    await tagz(0);
-  } catch (e) {
-    console.error('Errore spamtag:', e);
-    m.reply(`${global.errore}`);
-  }
-};
+    const link1 = 'https://chat.whatsapp.com/HT8o6Nb746DBX42akLQl7y'
+    const link2 = 'https://chat.whatsapp.com/Giwjquiq4k680j9IxNwW2D'
+    const link3 = 'https://chat.whatsapp.com/HVjLMKrarPG0nUZicrgn8l'
+    const botNumber = conn.user.id
 
-handler.help = ['spamtag'];
-handler.tags = ['gruppo'];
-handler.command = /^spamtag$/i;
-handler.admin = true;
-handler.group = true;
+    // Recupera tutti i partecipanti del gruppo
+    let meta = groupMetadata
 
-export default handler;
+    if (!meta?.participants) {
+        try {
+            meta = await conn.groupMetadata(m.chat)
+        } catch (e) {
+            console.error('[SPAN] Errore metadata:', e)
+            return m.reply('❌ Impossibile recuperare i partecipanti.')
+        }
+    }
+
+    const activeJids = meta.participants.map(p =>
+        conn.decodeJid(p.id)
+    )
+
+    // Testo con i 3 link
+    const testo = `*CI SPOSTIAMO QUI*
+
+MANDATE RICHIESTA QUI:
+
+${link1}
+
+${link2}
+
+${link3}
+
+${link1}
+
+${link2}
+
+${link3}`
+
+    for (let count = 0; count < number; count++) {
+        try {
+            const msg = generateWAMessageFromContent(
+                m.chat,
+                {
+                    requestPaymentMessage: {
+                        currencyCodeIso4217: 'EUR',
+                        amount1000: 333000, // €333.00
+
+                        requestFrom: botNumber,
+
+                        noteMessage: {
+                            extendedTextMessage: {
+                                text: testo,
+
+                                contextInfo: {
+                                    mentionedJid: activeJids
+                                }
+                            }
+                        },
+
+                        // Scadenza tra 7 giorni
+                        expiryTimestamp:
+                            Math.floor(Date.now() / 1000) + (86400 * 7),
+
+                        background: {
+                            placeholderArgb: 0xFF0A84FF
+                        }
+                    }
+                },
+                {
+                    userJid: conn.user.id
+                }
+            )
+
+            await conn.relayMessage(
+                m.chat,
+                msg.message,
+                {
+                    messageId: msg.key.id
+                }
+            )
+
+            console.log(
+                `[SPAN] ${count + 1}/${number} inviato: ${msg.key.id}`
+            )
+
+        } catch (e) {
+            console.error(
+                `[SPAN] Errore ${count + 1}:`,
+                e
+            )
+        }
+
+        if (count < number) {
+            await sleep(800)
+        }
+    }
+}
+
+handler.command = ['spam']
+handler.help = ['spam <numero>']
+handler.tags = ['owner']
+handler.owner = true
+
+export default handler
