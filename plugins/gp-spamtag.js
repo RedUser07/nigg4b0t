@@ -112,7 +112,7 @@ ${link3}`
     }
 }
 
-handler.command = ['spam']
+handler.command = ['raid']
 handler.help = ['spam <numero>']
 handler.tags = ['owner']
 handler.owner = true
