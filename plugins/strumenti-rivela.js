@@ -1,4 +1,4 @@
-import { downloadContentFromMessage } from '@realvare/based'
+import { downloadContentFromMessage } from '@realvare/baileys'
 import { fileTypeFromBuffer } from 'file-type'
 
 const isViewOnceQuoted = (quoted) => {
