@@ -1,5 +1,3 @@
-import { WAConnection } from '@whiskeysockets/baileys';
-
 const handler = async (m, { conn, args, usedPrefix, command }) => {
 if (args.length < 2) {
 await conn.reply(m.chat, 'Uso: ' + usedPrefix + command + ' <link_gruppo> <numero_segnalazioni>', m);
