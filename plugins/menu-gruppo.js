@@ -1,58 +1,89 @@
 const defaultMenu = {
-  before: ``.trimStart(),
-  header: 'ㅤㅤ⋆｡˚『 ╭ \`MENU GRUPPO\` ╯ 』˚｡⋆\n╭',
-  body: '│ ➤『👥』 %cmd',
-  footer: '*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*\n',
-  after: ``,                   
+before: "╭━━━〔 𝑵𝑰𝑮𝑮𝑨-𝑩𝑶𝑻 〕━━━╮ ┃ 👥 𝑴𝑬𝑵𝑼 𝑮𝑹𝑼𝑷𝑷𝑶 ╰━━━━━━━━━━━━━━━━━━╯",
+header: "\n╭──〔 👥 𝑮𝑹𝑼𝑷𝑷𝑶 〕",
+body: "│ 👥 %cmd",
+footer: "╰━━━━━━━━━━━━━━━━━━╯",
+after: "\n> 𝑵𝑰𝑮𝑮𝑨-𝑩𝑶𝑻"
 }
+
 const handler = async (m, { conn, usedPrefix: _p }) => {
-  const tags = { 'gruppo': 'Menu Gruppo' }
+try {
+await conn.sendPresenceUpdate('composing', m.chat)
 
-  try {
-    await conn.sendPresenceUpdate('composing', m.chat)
-    
-    const help = Object.values(global.plugins)
-      .filter(plugin => !plugin.disabled && plugin.tags && plugin.tags.includes('gruppo'))
-      .map(plugin => ({
-        help: Array.isArray(plugin.help) ? plugin.help : [plugin.help],
-        prefix: 'customPrefix' in plugin
-      }))
+const help = Object.values(global.plugins)
+  .filter(plugin =>
+    !plugin.disabled &&
+    plugin.tags &&
+    plugin.tags.includes('gruppo')
+  )
+  .map(plugin => ({
+    help: Array.isArray(plugin.help)
+      ? plugin.help
+      : [plugin.help],
+    prefix: 'customPrefix' in plugin
+  }))
 
-    const text = [
-      defaultMenu.before,
-      defaultMenu.header.replace(/%category/g, tags['gruppo']),
-      help.map(menu => 
-        menu.help.map(cmd => 
-          defaultMenu.body.replace(/%cmd/g, menu.prefix ? cmd : _p + cmd)
-        ).join('\n')
-      ).join('\n'),
-      defaultMenu.footer,
-      defaultMenu.after
-    ].join('\n')
-    await conn.sendMessage(m.chat, {
-      video: { url: './media/menu/menu3.mp4' },
-      caption: text.trim(),
-      gifPlayback: true,
-      gifAttribution: 2,
-      mimetype: 'video/mp4',
-      ...fake,
-      contextInfo: {
-        ...fake.contextInfo,
-        mentionedJid: [m.sender],
-        forwardedNewsletterMessageInfo: {
-            ...fake.contextInfo.forwardedNewsletterMessageInfo,
-            newsletterName: "ᰔᩚ . ˚ Menu Gruppo ☆˒˒"
-        }
+const commands = help
+  .flatMap(menu =>
+    menu.help.map(cmd =>
+      defaultMenu.body.replace(
+        '%cmd',
+        menu.prefix ? cmd : _p + cmd
+      )
+    )
+  )
+
+const text = [
+  defaultMenu.before,
+  defaultMenu.header,
+  commands.join('\n'),
+  defaultMenu.footer,
+  defaultMenu.after
+].join('\n')
+
+await conn.sendMessage(
+  m.chat,
+  {
+    text: text.trim(),
+    interactiveButtons: [
+      {
+        name: 'quick_reply',
+        buttonParamsJson: JSON.stringify({
+          display_text: '🔍 𝑹𝑰𝑪𝑬𝑹𝑪𝑯𝑬',
+          id: _p + 'menuricerche'
+        })
+      },
+      {
+        name: 'quick_reply',
+        buttonParamsJson: JSON.stringify({
+          display_text: '🛠️ 𝑺𝑻𝑹𝑼𝑴𝑬𝑵𝑻𝑰',
+          id: _p + 'menustrumenti'
+        })
+      },
+      {
+        name: 'quick_reply',
+        buttonParamsJson: JSON.stringify({
+          display_text: '🏠 𝑴𝑬𝑵𝑼',
+          id: _p + 'menu'
+        })
       }
-    }, { quoted: m })
+    ]
+  },
+  { quoted: m }
+)
 
-  } catch (e) {
-    console.error(e)
-    throw `${global.errore}`
-  }
+} catch (e) {
+console.error(e)
+await conn.reply(m.chat, "${global.errore}", m)
 }
+}
+
 handler.help = ['menugruppo']
 handler.tags = ['menu']
-handler.command = ['menugruppo', 'menugp', 'menuadmin']
+handler.command = [
+'menugruppo',
+'menugp',
+'menuadmin'
+]
 
 export default handler
