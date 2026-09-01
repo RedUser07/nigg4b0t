@@ -123,13 +123,6 @@ const buttons = [
   {
     name: 'quick_reply',
     buttonParamsJson: JSON.stringify({
-      display_text: '📥 𝑴𝑬𝑵𝑼 𝑫𝑶𝑾𝑵𝑳𝑶𝑨𝑫',
-      id: _p + 'menudownload'
-    })
-  },
-  {
-    name: 'quick_reply',
-    buttonParamsJson: JSON.stringify({
       display_text: '👨‍💻 𝑴𝑬𝑵𝑼 𝑪𝑹𝑬𝑨𝑻𝑶𝑹𝑬',
       id: _p + 'menucreatore'
     })
