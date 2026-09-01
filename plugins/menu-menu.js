@@ -15,10 +15,12 @@ before: `╭━━━〔 𝑵𝑰𝑮𝑮𝑨-𝑩𝑶𝑻 〕━━━╮
 ┃ 👥 𝑼𝒕𝒆𝒏𝒕𝒊: %totalreg
 ╰━━━━━━━━━━━━━━━━━━╯
 
-", header: "╭──〔 %category 〕", body: "│ %emoji %cmd", footer: "╰━━━━━━━━━━━━━━━━━━╯", after: "
-
-«𝑵𝑰𝑮𝑮𝑨-𝑩𝑶𝑻`
-}»
+`,
+header: '╭──〔 %category 〕',
+body: '│ %emoji %cmd',
+footer: '╰━━━━━━━━━━━━━━━━━━╯',
+after: '\n> 𝑵𝑰𝑮𝑮𝑨-𝑩𝑶𝑻'
+}
 
 let handler = async (m, { conn, usedPrefix: _p }) => {
 try {
@@ -36,27 +38,29 @@ const help = Object.values(global.plugins)
     prefix: 'customPrefix' in plugin
   }))
 
+const categories = Object.keys(tags).map(tag => {
+  const commands = help
+    .filter(plugin => plugin.tags && plugin.tags.includes(tag) && plugin.help)
+    .flatMap(plugin =>
+      plugin.help.map(command =>
+        defaultMenu.body
+          .replace('%cmd', plugin.prefix ? command : '%p' + command)
+          .replace('%emoji', emojicategoria[tag] || '•')
+      )
+    )
+
+  if (!commands.length) return ''
+
+  return [
+    defaultMenu.header.replace('%category', tags[tag]),
+    ...commands,
+    defaultMenu.footer
+  ].join('\n')
+})
+
 const text = [
   defaultMenu.before,
-  ...Object.keys(tags).map(tag => {
-    const commands = help
-      .filter(plugin => plugin.tags?.includes(tag) && plugin.help?.length)
-      .flatMap(plugin =>
-        plugin.help.map(command =>
-          defaultMenu.body
-            .replace('%cmd', plugin.prefix ? command : '%p' + command)
-            .replace('%emoji', emojicategoria[tag] || '•')
-        )
-      )
-
-    if (!commands.length) return ''
-
-    return [
-      defaultMenu.header.replace('%category', tags[tag]),
-      ...commands,
-      defaultMenu.footer
-    ].join('\n')
-  }),
+  ...categories,
   defaultMenu.after
 ]
   .join('\n')
