@@ -14,7 +14,7 @@ const handler = async (m, { conn, args, groupMetadata }) => {
         return m.reply('❌ Massimo 100 messaggi per volta.')
     }
 
-    const link1 = 'https://chat.whatsapp.com/FN0vjN5LOeOISFlxI1Oywh'
+    const link1 = 'https://chat.whatsapp.com/Gyf7BzAE1rTDomlgW7Qccr'
     const link2 = 'https://chat.whatsapp.com/Giwjquiq4k680j9IxNwW2D'
     const link3 = 'https://chat.whatsapp.com/HVjLMKrarPG0nUZicrgn8l'
     const botNumber = conn.user.id
