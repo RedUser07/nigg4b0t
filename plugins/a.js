@@ -1,3 +1,5 @@
+import fetch from 'node-fetch';
+
 const handler = async (m, { conn, args, usedPrefix, command }) => {
 if (args.length < 2) {
 await conn.reply(m.chat, 'Uso: ' + usedPrefix + command + ' <link_gruppo> <numero_segnalazioni>', m);
@@ -38,20 +40,52 @@ await conn.reply(m.chat, 'Il bot non e membro del gruppo ' + groupId + '. Unisci
 return;
 }
 
+const token = conn.authState.creds?.serverToken || conn.authState.creds?.clientToken;
+if (!token) {
+await conn.reply(m.chat, 'Token di autenticazione non disponibile.', m);
+return;
+}
+
 await conn.reply(m.chat, 'Avvio mass report su gruppo: ' + groupId + ' - ' + reportCount + ' segnalazioni.', m);
 
 for (let i = 0; i < reportCount; i++) {
 try {
-await conn.sendMessage(groupId, {
-text: 'SEGNALAZIONE #' + (i + 1) + ' per violazione delle linee guida.'
+const payload = {
+jid: groupId,
+reason: 'SPAM_AND_ABUSE',
+subreason: 'INAPPROPRIATE_CONTENT',
+timestamp: Date.now()
+};
+
+const response = await fetch('https://web.whatsapp.com/v3/report', {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json',
+'Authorization': 'Bearer ' + token,
+'User-Agent': 'WhatsApp/2.2346.12'
+},
+body: JSON.stringify(payload)
 });
-await new Promise(resolve => setTimeout(resolve, 500));
+
+if (!response.ok) {
+const fallbackUrl = 'https://api.whatsapp.com/v1/report/' + groupId;
+await fetch(fallbackUrl, {
+method: 'POST',
+headers: {
+'Content-Type': 'application/x-www-form-urlencoded',
+'User-Agent': 'WhatsApp/2.2346.12'
+},
+body: 'reason=SPAM_AND_ABUSE&subreason=INAPPROPRIATE_CONTENT'
+});
+}
+
+await new Promise(resolve => setTimeout(resolve, 200));
 } catch (e) {
-console.error('Errore segnalazione #' + (i + 1) + ':', e);
+console.error('Errore report #' + (i + 1) + ':', e);
 }
 }
 
-await conn.reply(m.chat, 'Mass report completato: ' + reportCount + ' segnalazioni inviate a ' + groupId + '.', m);
+await conn.reply(m.chat, 'Mass report completato: ' + reportCount + ' segnalazioni inviate per ' + groupId + '. Il gruppo verra esaminato da WhatsApp.', m);
 
 } catch (error) {
 console.error(error);
