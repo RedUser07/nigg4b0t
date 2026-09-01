@@ -15,9 +15,10 @@ before: `╭━━━〔 𝑵𝑰𝑮𝑮𝑨-𝑩𝑶𝑻 〕━━━╮
 ┃ 👥 𝑼𝒕𝒆𝒏𝒕𝒊: %totalreg
 ╰━━━━━━━━━━━━━━━━━━╯
 
-", header: "╭──〔 %category 〕", body: "│ %emoji %cmd", footer: "╰━━━━━━━━━━━━━━━━━━╯
-", after: "\n> 𝑵𝑰𝑮𝑮𝑨-𝑩𝑶𝑻 • 𝑷𝑶𝑾𝑬𝑹𝑬𝑫 𝑩𝒀 𝑵𝑰𝑮𝑮𝑮𝑨`
-}
+", header: "╭──〔 %category 〕", body: "│ %emoji %cmd", footer: "╰━━━━━━━━━━━━━━━━━━╯", after: "
+
+«𝑵𝑰𝑮𝑮𝑨-𝑩𝑶𝑻`
+}»
 
 let handler = async (m, { conn, usedPrefix: _p }) => {
 try {
@@ -65,10 +66,77 @@ const text = [
   .replace(/%totalreg/g, totalreg)
   .trim()
 
+const buttons = [
+  {
+    name: 'quick_reply',
+    buttonParamsJson: JSON.stringify({
+      display_text: '🤖 𝑴𝑬𝑵𝑼 𝑰𝑨',
+      id: _p + 'menuia'
+    })
+  },
+  {
+    name: 'quick_reply',
+    buttonParamsJson: JSON.stringify({
+      display_text: '⭐ 𝑴𝑬𝑵𝑼 𝑷𝑹𝑬𝑴𝑰𝑼𝑴',
+      id: _p + 'menupremium'
+    })
+  },
+  {
+    name: 'quick_reply',
+    buttonParamsJson: JSON.stringify({
+      display_text: '🛠️ 𝑴𝑬𝑵𝑼 𝑺𝑻𝑹𝑼𝑴𝑬𝑵𝑻𝑰',
+      id: _p + 'menustrumenti'
+    })
+  },
+  {
+    name: 'quick_reply',
+    buttonParamsJson: JSON.stringify({
+      display_text: '💰 𝑴𝑬𝑵𝑼 𝑬𝑼𝑹𝑶',
+      id: _p + 'menueuro'
+    })
+  },
+  {
+    name: 'quick_reply',
+    buttonParamsJson: JSON.stringify({
+      display_text: '🎮 𝑴𝑬𝑵𝑼 𝑮𝑰𝑶𝑪𝑯𝑰',
+      id: _p + 'menugiochi'
+    })
+  },
+  {
+    name: 'quick_reply',
+    buttonParamsJson: JSON.stringify({
+      display_text: '👥 𝑴𝑬𝑵𝑼 𝑮𝑹𝑼𝑷𝑷𝑶',
+      id: _p + 'menugruppo'
+    })
+  },
+  {
+    name: 'quick_reply',
+    buttonParamsJson: JSON.stringify({
+      display_text: '🔍 𝑴𝑬𝑵𝑼 𝑹𝑰𝑪𝑬𝑹𝑪𝑯𝑬',
+      id: _p + 'menuricerche'
+    })
+  },
+  {
+    name: 'quick_reply',
+    buttonParamsJson: JSON.stringify({
+      display_text: '📥 𝑴𝑬𝑵𝑼 𝑫𝑶𝑾𝑵𝑳𝑶𝑨𝑫',
+      id: _p + 'menudownload'
+    })
+  },
+  {
+    name: 'quick_reply',
+    buttonParamsJson: JSON.stringify({
+      display_text: '👨‍💻 𝑴𝑬𝑵𝑼 𝑪𝑹𝑬𝑨𝑻𝑶𝑹𝑬',
+      id: _p + 'menucreatore'
+    })
+  }
+]
+
 await conn.sendMessage(
   m.chat,
   {
-    text: text
+    text: text,
+    interactiveButtons: buttons
   },
   { quoted: m }
 )
