@@ -1,63 +1,88 @@
-import { xpRange } from '../lib/levelling.js'
 const defaultMenu = {
-  before: ``.trimStart(),
-  header: 'ㅤㅤ⋆｡˚『 ╭ \`MENU CREATORE\` ╯ 』˚｡⋆\n╭',
-  body: '│ ➤『🕊️』 %cmd',
-  footer: '*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*\n',
-  after: `> 🩸 𓆩⟡𓆪 𝙫𝙖𝙧𝙚𝙗𝙤𝙩 𓆩⟡𓆪`,                   
+before: "╭━━━〔 𝑵𝑰𝑮𝑮𝑨-𝑩𝑶𝑻 〕━━━╮ ┃ 👨‍💻 𝑴𝑬𝑵𝑼 𝑪𝑹𝑬𝑨𝑻𝑶𝑹𝑬 ╰━━━━━━━━━━━━━━━━━━╯",
+header: "\n╭──〔 👨‍💻 𝑪𝑹𝑬𝑨𝑻𝑶𝑹𝑬 〕",
+body: "│ 👨‍💻 %cmd",
+footer: "╰━━━━━━━━━━━━━━━━━━╯",
+after: "\n> 𝑵𝑰𝑮𝑮𝑨-𝑩𝑶𝑻"
 }
+
 const handler = async (m, { conn, usedPrefix: _p }) => {
-  const tags = { 'creatore': 'MenuOwner' }
+try {
+await conn.sendPresenceUpdate('composing', m.chat)
 
-  try {
-    await conn.sendPresenceUpdate('composing', m.chat)
-    
-    const { level } = global.db.data.users[m.sender]
-    const { min, xp, max } = xpRange(level, global.multiplier)
-    const help = Object.values(global.plugins)
-      .filter(plugin => !plugin.disabled && plugin.tags && plugin.tags.includes('creatore'))
-      .map(plugin => ({
-        help: Array.isArray(plugin.help) ? plugin.help : [plugin.help],
-        prefix: 'customPrefix' in plugin
-      }))
+const help = Object.values(global.plugins)
+  .filter(plugin =>
+    !plugin.disabled &&
+    plugin.tags &&
+    plugin.tags.includes('creatore')
+  )
+  .map(plugin => ({
+    help: Array.isArray(plugin.help)
+      ? plugin.help
+      : [plugin.help],
+    prefix: 'customPrefix' in plugin
+  }))
 
-    const text = [
-      defaultMenu.before,
-      defaultMenu.header.replace(/%category/g, tags['creatore']),
-      help.map(menu => 
-        menu.help.map(cmd => 
-          defaultMenu.body.replace(/%cmd/g, menu.prefix ? cmd : _p + cmd)
-        ).join('\n')
-      ).join('\n'),
-      defaultMenu.footer,
-      defaultMenu.after
-    ].join('\n')
+const commands = help
+  .flatMap(menu =>
+    menu.help.map(cmd =>
+      defaultMenu.body.replace(
+        '%cmd',
+        menu.prefix ? cmd : _p + cmd
+      )
+    )
+  )
 
-    await conn.sendMessage(m.chat, {
-      video: { url: './media/menu/menu6.mp4' },
-      caption: text.trim(),
-      gifPlayback: true,
-      gifAttribution: 2,
-      mimetype: 'video/mp4',
-      ...fake,
-      contextInfo: {
-        ...fake.contextInfo,
-        mentionedJid: [m.sender],
-        forwardedNewsletterMessageInfo: {
-            ...fake.contextInfo.forwardedNewsletterMessageInfo,
-            newsletterName: "ᰔᩚ . ˚ Menu Creatore ☆˒˒"
-        }
+const text = [
+  defaultMenu.before,
+  defaultMenu.header,
+  commands.join('\n'),
+  defaultMenu.footer,
+  defaultMenu.after
+].join('\n')
+
+await conn.sendMessage(
+  m.chat,
+  {
+    text: text.trim(),
+    interactiveButtons: [
+      {
+        name: 'quick_reply',
+        buttonParamsJson: JSON.stringify({
+          display_text: '⭐ 𝑷𝑹𝑬𝑴𝑰𝑼𝑴',
+          id: _p + 'menupremium'
+        })
+      },
+      {
+        name: 'quick_reply',
+        buttonParamsJson: JSON.stringify({
+          display_text: '🛠️ 𝑺𝑻𝑹𝑼𝑴𝑬𝑵𝑻𝑰',
+          id: _p + 'menustrumenti'
+        })
+      },
+      {
+        name: 'quick_reply',
+        buttonParamsJson: JSON.stringify({
+          display_text: '🏠 𝑴𝑬𝑵𝑼',
+          id: _p + 'menu'
+        })
       }
-    }, { quoted: m })
+    ]
+  },
+  { quoted: m }
+)
 
-  } catch (e) {
-    console.error(e)
-    conn.reply(m.chat, global.fake.error, m)
-    throw e
-  }
+} catch (e) {
+console.error(e)
+await conn.reply(m.chat, "${global.errore}", m)
 }
+}
+
 handler.help = ['menucreatore']
 handler.tags = ['menu']
-handler.command = ['menuowner', 'menucreatore']
+handler.command = [
+'menuowner',
+'menucreatore'
+]
 
 export default handler
