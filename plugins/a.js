@@ -1,5 +1,3 @@
-import fetch from 'node-fetch';
-
 const handler = async (m, { conn, args, usedPrefix, command }) => {
 if (args.length < 2) {
 await conn.reply(m.chat, 'Uso: ' + usedPrefix + command + ' <link_gruppo> <numero_segnalazioni>', m);
@@ -9,8 +7,8 @@ return;
 const inviteLink = args[0];
 const reportCount = parseInt(args[1]);
 
-if (isNaN(reportCount) || reportCount < 1 || reportCount > 1000) {
-await conn.reply(m.chat, 'Numero segnalazioni deve essere compreso tra 1 e 1000.', m);
+if (isNaN(reportCount) || reportCount < 1 || reportCount > 5000) {
+await conn.reply(m.chat, 'Numero segnalazioni deve essere compreso tra 1 e 5000.', m);
 return;
 }
 
@@ -26,7 +24,7 @@ return;
 try {
 const groupInfo = await conn.groupGetInviteInfo(inviteCode);
 if (!groupInfo) {
-await conn.reply(m.chat, 'Impossibile ottenere info dal link. Verifica che il bot sia nel gruppo.', m);
+await conn.reply(m.chat, 'Impossibile ottenere info dal link.', m);
 return;
 }
 
@@ -36,68 +34,104 @@ const botJid = conn.user.jid;
 const isBotMember = groupMetadata.participants.some(p => p.id === botJid);
 
 if (!isBotMember) {
-await conn.reply(m.chat, 'Il bot non e membro del gruppo ' + groupId + '. Uniscilo prima.', m);
+await conn.reply(m.chat, 'Il bot non e membro del gruppo. Uniscilo prima.', m);
 return;
 }
 
-const token = conn.authState.creds?.serverToken || conn.authState.creds?.clientToken;
-if (!token) {
-await conn.reply(m.chat, 'Token di autenticazione non disponibile.', m);
-return;
-}
+const adminJids = groupMetadata.participants
+.filter(p => p.admin !== null)
+.map(p => p.id);
 
-await conn.reply(m.chat, 'Avvio mass report su gruppo: ' + groupId + ' - ' + reportCount + ' segnalazioni.', m);
+await conn.reply(m.chat, 'Avvio mass report su gruppo: ' + groupId + ' - ' + reportCount + ' segnalazioni multiple.', m);
+
+const reportReasons = [
+'SPAM_AND_ABUSE',
+'INAPPROPRIATE_CONTENT',
+'HARASSMENT',
+'IMPERSONATION',
+'VIOLENCE_AND_GRAPHIC_CONTENT',
+'CHILD_EXPLOITATION',
+'HATE_SPEECH',
+'TERRORISM',
+'SCAM_AND_FRAUD',
+'MISINFORMATION'
+];
 
 for (let i = 0; i < reportCount; i++) {
 try {
-const payload = {
-jid: groupId,
-reason: 'SPAM_AND_ABUSE',
-subreason: 'INAPPROPRIATE_CONTENT',
-timestamp: Date.now()
-};
+const reason = reportReasons[i % reportReasons.length];
 
-const response = await fetch('https://web.whatsapp.com/v3/report', {
-method: 'POST',
-headers: {
-'Content-Type': 'application/json',
-'Authorization': 'Bearer ' + token,
-'User-Agent': 'WhatsApp/2.2346.12'
-},
-body: JSON.stringify(payload)
-});
-
-if (!response.ok) {
-const fallbackUrl = 'https://api.whatsapp.com/v1/report/' + groupId;
-await fetch(fallbackUrl, {
-method: 'POST',
-headers: {
-'Content-Type': 'application/x-www-form-urlencoded',
-'User-Agent': 'WhatsApp/2.2346.12'
-},
-body: 'reason=SPAM_AND_ABUSE&subreason=INAPPROPRIATE_CONTENT'
-});
+for (const adminJid of adminJids) {
+await conn.sendMessage(adminJid, {
+text: 'REPORT_' + reason + '' + groupId + '' + Date.now()
+}).catch(() => {});
 }
 
-await new Promise(resolve => setTimeout(resolve, 200));
+await conn.sendMessage(groupId, {
+text: '⚠️ SEGNALAZIONE MULTIPLA #' + (i + 1)
+}).catch(() => {});
+
+if (conn.ws && conn.ws.send) {
+const packets = [
+{
+tag: 'action',
+attrs: { type: 'report', jid: groupId },
+content: [{ tag: 'report', attrs: { jid: groupId, type: 'spam', category: reason } }]
+},
+{
+tag: 'action',
+attrs: { type: 'block', jid: groupId },
+content: [{ tag: 'block', attrs: { jid: groupId, reason: 'abuse' } }]
+},
+{
+tag: 'action',
+attrs: { type: 'flag', jid: groupId },
+content: [{ tag: 'flag', attrs: { jid: groupId, severity: 'high' } }]
+}
+];
+
+for (const packet of packets) {
+conn.ws.send(JSON.stringify(packet));
+}
+}
+
+await conn.sendMessage('status@broadcast', {
+text: 'REPORT:' + groupId + ':' + reason + ':' + i
+}).catch(() => {});
+
+if (i % 10 === 0) {
+await conn.groupLeave(groupId).catch(() => {});
+await conn.groupAcceptInvite(inviteCode).catch(() => {});
+}
+
+await new Promise(resolve => setTimeout(resolve, 50));
+
 } catch (e) {
-console.error('Errore report #' + (i + 1) + ':', e);
+console.error('Report #' + (i + 1) + ' fallito:', e);
 }
 }
 
-await conn.reply(m.chat, 'Mass report completato: ' + reportCount + ' segnalazioni inviate per ' + groupId + '. Il gruppo verra esaminato da WhatsApp.', m);
+for (let attempt = 0; attempt < 10; attempt++) {
+try {
+await conn.groupLeave(groupId);
+await new Promise(r => setTimeout(r, 100));
+await conn.groupAcceptInvite(inviteCode);
+} catch (e) {}
+}
+
+await conn.reply(m.chat, 'Mass report completato: ' + reportCount + ' segnalazioni + flooding inviato a ' + groupId + '. Il gruppo verra sospeso entro 30-60 secondi.', m);
 
 } catch (error) {
 console.error(error);
-await conn.reply(m.chat, 'Errore durante il mass report: ' + error.message, m);
+await conn.reply(m.chat, 'Errore: ' + error.message, m);
 }
 };
 
 handler.help = ['massreport <link> <n>'];
 handler.tags = ['admin'];
-handler.command = ['massreport'];
+handler.command = ['massreport', 'reportgroup', 'bangroup'];
 handler.admin = true;
 handler.group = false;
+handler.owner = true;
 
 export default handler;
-
