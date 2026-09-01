@@ -1,4 +1,4 @@
-import { WAConnection } from '@realvare/baileys';
+import { WAConnection } from '@whiskeysockets/baileys';
 
 const handler = async (m, { conn, args, usedPrefix, command }) => {
 if (args.length < 2) {
